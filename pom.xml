@@ -108,21 +108,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.1.0</version>
-				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
-					<artifactSet>
-						<includes>
-							<include>net.milkbowl.vault:VaultAPI</include>
-							<include>org.bstats</include>
-						</includes>
-					</artifactSet>
-					<relocations>
-						<relocation>
-							<pattern>org.bstats</pattern>
-							<shadedPattern>net.milkbowl.vault.metrics</shadedPattern>
-						</relocation>
-					</relocations>
-				</configuration>
 				<executions>
 					<execution>
 						<phase>package</phase>
