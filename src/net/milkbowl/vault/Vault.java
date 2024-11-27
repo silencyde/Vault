@@ -21,11 +21,14 @@ import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 
+import net.milkbowl.vault.permission.plugins.Permission_SuperPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Vault extends JavaPlugin {
@@ -43,6 +46,9 @@ public class Vault extends JavaPlugin {
         saveConfig();
         getCommand("vault-info").setExecutor(this);
         getCommand("vault-convert").setExecutor(this);
+        ServicesManager sm = getServer().getServicesManager();
+        Permission perms = new Permission_SuperPerms(this);
+        sm.register(Permission.class, perms, this, ServicePriority.Lowest);
     }
 
     @Override
