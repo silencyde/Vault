@@ -45,7 +45,6 @@ public class Vault extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
         getCommand("vault-info").setExecutor(this);
-        getCommand("vault-convert").setExecutor(this);
         ServicesManager sm = getServer().getServicesManager();
         Permission perms = new Permission_SuperPerms(this);
         sm.register(Permission.class, perms, this, ServicePriority.Lowest);
@@ -61,103 +60,45 @@ public class Vault extends JavaPlugin {
         if (command.getName().equalsIgnoreCase("vault-info")) {
             infoCommand(sender);
             return true;
-        } else if (command.getName().equalsIgnoreCase("vault-convert")) {
-            convertCommand(sender, args);
-            return true;
         } else {
             // Show help
             sender.sendMessage("Vault Commands:");
             sender.sendMessage("  /vault-info - Displays information about Vault");
-            sender.sendMessage("  /vault-convert [economy1] [economy2] - Converts from one Economy to another");
             return true;
         }
     }
 
-    private void convertCommand(CommandSender sender, String[] args) {
-        Collection<RegisteredServiceProvider<Economy>> econs = this.getServer().getServicesManager().getRegistrations(Economy.class);
-        if (econs == null || econs.size() < 2) {
-            sender.sendMessage("You must have at least 2 economies loaded to convert.");
-            return;
-        } else if (args.length != 2) {
-            sender.sendMessage("You must specify only the economy to convert from and the economy to convert to. (names should not contain spaces)");
-            return;
-        }
-        Economy econ1 = null;
-        Economy econ2 = null;
-        StringBuilder economies = new StringBuilder();
-        for (RegisteredServiceProvider<Economy> econ : econs) {
-            String econName = econ.getProvider().getName().replace(" ", "");
-            if (econName.equalsIgnoreCase(args[0])) {
-                econ1 = econ.getProvider();
-            } else if (econName.equalsIgnoreCase(args[1])) {
-                econ2 = econ.getProvider();
-            }
-            if (economies.length() > 0) {
-            	economies.append(", ");
-            }
-            economies.append(econName);
-        }
-
-        if (econ1 == null) {
-            sender.sendMessage("Could not find " + args[0] + " loaded on the server, check your spelling.");
-            sender.sendMessage("Valid economies are: " + economies);
-            return;
-        } else if (econ2 == null) {
-            sender.sendMessage("Could not find " + args[1] + " loaded on the server, check your spelling.");
-            sender.sendMessage("Valid economies are: " + economies);
-            return;
-        }
-
-        sender.sendMessage("This may take some time to convert, expect server lag.");
-        for (OfflinePlayer op : Bukkit.getServer().getOfflinePlayers()) {
-            if (econ1.hasAccount(op)) {
-                if (econ2.hasAccount(op)) {
-                    continue;
-                }
-                econ2.createPlayerAccount(op);
-                double diff = econ1.getBalance(op) - econ2.getBalance(op);
-                if (diff > 0) {
-                	econ2.depositPlayer(op, diff);
-                } else if (diff < 0) {
-                	econ2.withdrawPlayer(op, -diff);
-                }
-                
-            }
-        }
-        sender.sendMessage("Conversion complete, please verify the data before using it.");
-    }
-
     private void infoCommand(CommandSender sender) {
         // Get String of Registered Economy Services
-        StringBuilder registeredEcons = null;
+        StringBuilder registeredEcons = new StringBuilder();
         Collection<RegisteredServiceProvider<Economy>> econs = this.getServer().getServicesManager().getRegistrations(Economy.class);
         for (RegisteredServiceProvider<Economy> econ : econs) {
             Economy e = econ.getProvider();
-            if (registeredEcons == null) {
-                registeredEcons = new StringBuilder(e.getName());
+            if (registeredEcons.isEmpty()) {
+                registeredEcons.append(e.getName());
             } else {
                 registeredEcons.append(", ").append(e.getName());
             }
         }
 
         // Get String of Registered Permission Services
-        StringBuilder registeredPerms = null;
+        StringBuilder registeredPerms = new StringBuilder();
         Collection<RegisteredServiceProvider<Permission>> perms = this.getServer().getServicesManager().getRegistrations(Permission.class);
         for (RegisteredServiceProvider<Permission> perm : perms) {
             Permission p = perm.getProvider();
-            if (registeredPerms == null) {
-                registeredPerms = new StringBuilder(p.getName());
+            if (registeredPerms.isEmpty()) {
+                registeredPerms.append(p.getName());
             } else {
                 registeredPerms.append(", ").append(p.getName());
             }
         }
 
-        StringBuilder registeredChats = null;
+        StringBuilder registeredChats = new StringBuilder();
         Collection<RegisteredServiceProvider<Chat>> chats = this.getServer().getServicesManager().getRegistrations(Chat.class);
         for (RegisteredServiceProvider<Chat> chat : chats) {
             Chat c = chat.getProvider();
-            if (registeredChats == null) {
-                registeredChats = new StringBuilder(c.getName());
+            if (registeredChats.isEmpty()) {
+                registeredChats.append(c.getName());
             } else {
                 registeredChats.append(", ").append(c.getName());
             }
