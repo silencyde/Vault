@@ -1,7 +1,7 @@
 name: ${project.name}
-version: ${project.version}-b${env.TRAVIS_BUILD_NUMBER}
+version: ${project.version}-SILENCY
 description: ${project.description}
-authors: [cereal, Sleaker, mung3r]
+authors: [cereal, Sleaker, mung3r, LinuxServer]
 website: ${project.url}
 api-version: 1.13
 
@@ -13,11 +13,6 @@ commands:
     description: Displays information about Vault 
     usage: |
            /<command> - Displays Vault information
-    permission: vault.admin
-  vault-convert:
-    description: Converts all data in economy1 and dumps it into economy2
-    usage: |
-           /<command> [economy1] [economy2]
     permission: vault.admin
 permissions:
   vault.admin:
