@@ -108,6 +108,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.1.0</version>
+				<configuration>
+					<artifactSet>
+						<includes>
+							<include>net.milkbowl.vault:VaultAPI</include>
+						</includes>
+					</artifactSet>
+				</configuration>
 				<executions>
 					<execution>
 						<phase>package</phase>
