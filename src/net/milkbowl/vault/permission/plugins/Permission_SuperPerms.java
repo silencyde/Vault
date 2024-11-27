@@ -19,15 +19,13 @@ import org.bukkit.plugin.Plugin;
 
 public class Permission_SuperPerms extends Permission {
 
-    private final String name = "SuperPerms";
-
     public Permission_SuperPerms(Plugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public String getName() {
-        return name;
+        return "SuperPerms";
     }
 
     @Override
@@ -38,7 +36,7 @@ public class Permission_SuperPerms extends Permission {
     @Override
     public boolean playerHas(String world, String player, String permission) {
         Player p = plugin.getServer().getPlayer(player);
-        return p != null ? p.hasPermission(permission) : false;
+        return p != null && p.hasPermission(permission);
     }
 
     @Override
