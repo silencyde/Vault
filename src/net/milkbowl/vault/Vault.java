@@ -15,49 +15,20 @@
  */
 package net.milkbowl.vault;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.logging.Logger;
 
 import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 
-import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 public class Vault extends JavaPlugin {
-
-    private static final String VAULT_BUKKIT_URL = "https://dev.bukkit.org/projects/Vault";
-    private static Logger log;
-    private Permission perms;
-    private String newVersionTitle = "";
-    private double newVersion = 0;
-    private double currentVersion = 0;
-    private String currentVersionTitle = "";
-    private ServicesManager sm;
-    private Vault plugin;
-
     @Override
     public void onDisable() {
         // Remove all Service Registrations
@@ -67,64 +38,11 @@ public class Vault extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        plugin = this;
-        log = this.getLogger();
-        currentVersionTitle = getDescription().getVersion().split("-")[0];
-        currentVersion = Double.parseDouble(currentVersionTitle.replaceFirst("\\.", ""));
-        sm = getServer().getServicesManager();
-        // set defaults
         getConfig().addDefault("update-check", true);
         getConfig().options().copyDefaults(true);
         saveConfig();
-
         getCommand("vault-info").setExecutor(this);
         getCommand("vault-convert").setExecutor(this);
-        getServer().getPluginManager().registerEvents(new VaultListener(), this);
-        // Schedule to check the version every 30 minutes for an update. This is to update the most recent 
-        // version so if an admin reconnects they will be warned about newer versions.
-        this.getServer().getScheduler().runTask(this, new Runnable() {
-
-            @Override
-            public void run() {
-                // Programmatically set the default permission value cause Bukkit doesn't handle plugin.yml properly for Load order STARTUP plugins
-                org.bukkit.permissions.Permission perm = getServer().getPluginManager().getPermission("vault.update");
-                if (perm == null)
-                {
-                    perm = new org.bukkit.permissions.Permission("vault.update");
-                    perm.setDefault(PermissionDefault.OP);
-                    plugin.getServer().getPluginManager().addPermission(perm);
-                }
-                perm.setDescription("Allows a user or the console to check for vault updates");
-
-                getServer().getScheduler().runTaskTimerAsynchronously(plugin, new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (getServer().getConsoleSender().hasPermission("vault.update") && getConfig().getBoolean("update-check", true)) {
-                            try {
-                            	log.info("Checking for Updates ... ");
-                                newVersion = updateCheck(currentVersion);
-                                if (newVersion > currentVersion) {
-                                    log.warning("Stable Version: " + newVersionTitle + " is out!" + " You are still running version: " + currentVersionTitle);
-                                    log.warning("Update at: https://dev.bukkit.org/projects/vault");
-                                } else if (currentVersion > newVersion) {
-                                    log.info("Stable Version: " + newVersionTitle + " | Current Version: " + currentVersionTitle);
-                                }
-                            } catch (Exception e) {
-                                // ignore exceptions
-                            }
-                        }
-                    }
-                }, 0, 432000);
-
-            }
-        });
-
-        // Load up the Plugin metrics
-        Metrics metrics = new Metrics(this, 887);
-        findCustomData(metrics);
-
-        log.info(String.format("Enabled Version %s", getDescription().getVersion()));
     }
 
     @Override
@@ -260,91 +178,5 @@ public class Vault extends JavaPlugin {
         sender.sendMessage(String.format("[%s] Economy: %s [%s]", getDescription().getName(), econ == null ? "None" : econ.getName(), registeredEcons.toString()));
         sender.sendMessage(String.format("[%s] Permission: %s [%s]", getDescription().getName(), perm == null ? "None" : perm.getName(), registeredPerms.toString()));
         sender.sendMessage(String.format("[%s] Chat: %s [%s]", getDescription().getName(), chat == null ? "None" : chat.getName(), registeredChats.toString()));
-    }
-
-    /**
-     * Determines if all packages in a String array are within the Classpath
-     * This is the best way to determine if a specific plugin exists and will be
-     * loaded. If the plugin package isn't loaded, we shouldn't bother waiting
-     * for it!
-     * @param packages String Array of package names to check
-     * @return Success or Failure
-     */
-    private static boolean packagesExists(String...packages) {
-        try {
-            for (String pkg : packages) {
-                Class.forName(pkg);
-            }
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public double updateCheck(double currentVersion) {
-        try {
-            URL url = new URL("https://api.curseforge.com/servermods/files?projectids=33184");
-            URLConnection conn = url.openConnection();
-            conn.setReadTimeout(5000);
-            conn.addRequestProperty("User-Agent", "Vault Update Checker");
-            conn.setDoOutput(true);
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            final String response = reader.readLine();
-            final JSONArray array = (JSONArray) JSONValue.parse(response);
-
-            if (array.isEmpty()) {
-                this.getLogger().warning("No files found, or Feed URL is bad.");
-                return currentVersion;
-            }
-            // Pull the last version from the JSON
-            newVersionTitle = ((String) ((JSONObject) array.get(array.size() - 1)).get("name")).replace("Vault", "").trim();
-            return Double.parseDouble(newVersionTitle.replaceFirst("\\.", "").trim());
-        } catch (Exception e) {
-            log.info("There was an issue attempting to check for the latest version.");
-        }
-        return currentVersion;
-    }
-
-    private void findCustomData(Metrics metrics) {
-        // Create our Economy Graph and Add our Economy plotters
-        RegisteredServiceProvider<Economy> rspEcon = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
-        Economy econ = null;
-        if (rspEcon != null) {
-            econ = rspEcon.getProvider();
-        }
-        final String econName = econ != null ? econ.getName() : "No Economy";
-        metrics.addCustomChart(new SimplePie("economy", () -> econName));
-
-        // Create our Permission Graph and Add our permission Plotters
-        final String permName = Bukkit.getServer().getServicesManager().getRegistration(Permission.class).getProvider().getName();
-        metrics.addCustomChart(new SimplePie("permission", () -> permName));
-
-        // Create our Chat Graph and Add our chat Plotters
-        RegisteredServiceProvider<Chat> rspChat = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
-        Chat chat = null;
-        if (rspChat != null) {
-            chat = rspChat.getProvider();
-        }
-        final String chatName = chat != null ? chat.getName() : "No Chat";
-        metrics.addCustomChart(new SimplePie("chat", () -> chatName));
-    }
-
-    public class VaultListener implements Listener {
-
-        @EventHandler(priority = EventPriority.MONITOR)
-        public void onPlayerJoin(PlayerJoinEvent event) {
-            Player player = event.getPlayer();
-            if (perms.has(player, "vault.update")) {
-                try {
-                    if (newVersion > currentVersion) {
-                        player.sendMessage("Vault " +  newVersionTitle + " is out! You are running " + currentVersionTitle);
-                        player.sendMessage("Update Vault at: " + VAULT_BUKKIT_URL);
-                    }
-                } catch (Exception e) {
-                    // Ignore exceptions
-                }
-            }
-        }
-
     }
 }
