@@ -70,7 +70,7 @@ public class Vault extends JavaPlugin {
         plugin = this;
         log = this.getLogger();
         currentVersionTitle = getDescription().getVersion().split("-")[0];
-        currentVersion = Double.valueOf(currentVersionTitle.replaceFirst("\\.", ""));
+        currentVersion = Double.parseDouble(currentVersionTitle.replaceFirst("\\.", ""));
         sm = getServer().getServicesManager();
         // set defaults
         getConfig().addDefault("update-check", true);
@@ -160,7 +160,7 @@ public class Vault extends JavaPlugin {
         }
         Economy econ1 = null;
         Economy econ2 = null;
-        String economies = "";
+        StringBuilder economies = new StringBuilder();
         for (RegisteredServiceProvider<Economy> econ : econs) {
             String econName = econ.getProvider().getName().replace(" ", "");
             if (econName.equalsIgnoreCase(args[0])) {
@@ -169,9 +169,9 @@ public class Vault extends JavaPlugin {
                 econ2 = econ.getProvider();
             }
             if (economies.length() > 0) {
-            	economies += ", ";
+            	economies.append(", ");
             }
-            economies += econName;
+            economies.append(econName);
         }
 
         if (econ1 == null) {
@@ -205,37 +205,37 @@ public class Vault extends JavaPlugin {
 
     private void infoCommand(CommandSender sender) {
         // Get String of Registered Economy Services
-        String registeredEcons = null;
+        StringBuilder registeredEcons = null;
         Collection<RegisteredServiceProvider<Economy>> econs = this.getServer().getServicesManager().getRegistrations(Economy.class);
         for (RegisteredServiceProvider<Economy> econ : econs) {
             Economy e = econ.getProvider();
             if (registeredEcons == null) {
-                registeredEcons = e.getName();
+                registeredEcons = new StringBuilder(e.getName());
             } else {
-                registeredEcons += ", " + e.getName();
+                registeredEcons.append(", ").append(e.getName());
             }
         }
 
         // Get String of Registered Permission Services
-        String registeredPerms = null;
+        StringBuilder registeredPerms = null;
         Collection<RegisteredServiceProvider<Permission>> perms = this.getServer().getServicesManager().getRegistrations(Permission.class);
         for (RegisteredServiceProvider<Permission> perm : perms) {
             Permission p = perm.getProvider();
             if (registeredPerms == null) {
-                registeredPerms = p.getName();
+                registeredPerms = new StringBuilder(p.getName());
             } else {
-                registeredPerms += ", " + p.getName();
+                registeredPerms.append(", ").append(p.getName());
             }
         }
 
-        String registeredChats = null;
+        StringBuilder registeredChats = null;
         Collection<RegisteredServiceProvider<Chat>> chats = this.getServer().getServicesManager().getRegistrations(Chat.class);
         for (RegisteredServiceProvider<Chat> chat : chats) {
             Chat c = chat.getProvider();
             if (registeredChats == null) {
-                registeredChats = c.getName();
+                registeredChats = new StringBuilder(c.getName());
             } else {
-                registeredChats += ", " + c.getName();
+                registeredChats.append(", ").append(c.getName());
             }
         }
 
@@ -257,9 +257,9 @@ public class Vault extends JavaPlugin {
         }
         // Send user some info!
         sender.sendMessage(String.format("[%s] Vault v%s Information", getDescription().getName(), getDescription().getVersion()));
-        sender.sendMessage(String.format("[%s] Economy: %s [%s]", getDescription().getName(), econ == null ? "None" : econ.getName(), registeredEcons));
-        sender.sendMessage(String.format("[%s] Permission: %s [%s]", getDescription().getName(), perm == null ? "None" : perm.getName(), registeredPerms));
-        sender.sendMessage(String.format("[%s] Chat: %s [%s]", getDescription().getName(), chat == null ? "None" : chat.getName(), registeredChats));
+        sender.sendMessage(String.format("[%s] Economy: %s [%s]", getDescription().getName(), econ == null ? "None" : econ.getName(), registeredEcons.toString()));
+        sender.sendMessage(String.format("[%s] Permission: %s [%s]", getDescription().getName(), perm == null ? "None" : perm.getName(), registeredPerms.toString()));
+        sender.sendMessage(String.format("[%s] Chat: %s [%s]", getDescription().getName(), chat == null ? "None" : chat.getName(), registeredChats.toString()));
     }
 
     /**
@@ -292,13 +292,13 @@ public class Vault extends JavaPlugin {
             final String response = reader.readLine();
             final JSONArray array = (JSONArray) JSONValue.parse(response);
 
-            if (array.size() == 0) {
+            if (array.isEmpty()) {
                 this.getLogger().warning("No files found, or Feed URL is bad.");
                 return currentVersion;
             }
             // Pull the last version from the JSON
             newVersionTitle = ((String) ((JSONObject) array.get(array.size() - 1)).get("name")).replace("Vault", "").trim();
-            return Double.valueOf(newVersionTitle.replaceFirst("\\.", "").trim());
+            return Double.parseDouble(newVersionTitle.replaceFirst("\\.", "").trim());
         } catch (Exception e) {
             log.info("There was an issue attempting to check for the latest version.");
         }
@@ -313,21 +313,11 @@ public class Vault extends JavaPlugin {
             econ = rspEcon.getProvider();
         }
         final String econName = econ != null ? econ.getName() : "No Economy";
-        metrics.addCustomChart(new SimplePie("economy", new Callable<String>() {
-            @Override
-            public String call() {
-                return econName;
-            }
-        }));
+        metrics.addCustomChart(new SimplePie("economy", () -> econName));
 
         // Create our Permission Graph and Add our permission Plotters
         final String permName = Bukkit.getServer().getServicesManager().getRegistration(Permission.class).getProvider().getName();
-        metrics.addCustomChart(new SimplePie("permission", new Callable<String>() {
-            @Override
-            public String call() {
-                return permName;
-            }
-        }));
+        metrics.addCustomChart(new SimplePie("permission", () -> permName));
 
         // Create our Chat Graph and Add our chat Plotters
         RegisteredServiceProvider<Chat> rspChat = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
@@ -336,12 +326,7 @@ public class Vault extends JavaPlugin {
             chat = rspChat.getProvider();
         }
         final String chatName = chat != null ? chat.getName() : "No Chat";
-        metrics.addCustomChart(new SimplePie("chat", new Callable<String>() {
-            @Override
-            public String call() {
-                return chatName;
-            }
-        }));
+        metrics.addCustomChart(new SimplePie("chat", () -> chatName));
     }
 
     public class VaultListener implements Listener {
