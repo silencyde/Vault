@@ -58,13 +58,12 @@ public class Vault extends JavaPlugin {
 
         if (command.getName().equalsIgnoreCase("vault-info")) {
             infoCommand(sender);
-            return true;
         } else {
             // Show help
             sender.sendMessage("Vault Commands:");
             sender.sendMessage("  /vault-info - Displays information about Vault");
-            return true;
         }
+        return true;
     }
 
     private void infoCommand(CommandSender sender) {
