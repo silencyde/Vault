@@ -32,21 +32,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Vault extends JavaPlugin {
     @Override
-    public void onDisable() {
-        // Remove all Service Registrations
-        getServer().getServicesManager().unregisterAll(this);
-        Bukkit.getScheduler().cancelTasks(this);
-    }
-
-    @Override
     public void onEnable() {
-        getConfig().addDefault("update-check", true);
-        getConfig().options().copyDefaults(true);
-        saveConfig();
         getCommand("vault-info").setExecutor(this);
         ServicesManager sm = getServer().getServicesManager();
         Permission perms = new Permission_SuperPerms(this);
         sm.register(Permission.class, perms, this, ServicePriority.Lowest);
+    }
+
+    @Override
+    public void onDisable() {
+        getServer().getServicesManager().unregisterAll(this);
     }
 
     @Override

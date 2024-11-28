@@ -3,7 +3,7 @@ version: ${project.version}-SILENCY
 description: ${project.description}
 authors: [cereal, Sleaker, mung3r, LinuxServer]
 website: ${project.url}
-api-version: 1.13
+api-version: 1.21
 
 main: ${mainClass}
 load: startup
