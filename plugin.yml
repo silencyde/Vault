@@ -1,5 +1,5 @@
 name: ${project.name}
-version: ${project.version}-SILENCY
+version: ${project.version}
 description: ${project.description}
 authors: [cereal, Sleaker, mung3r, LinuxServer]
 website: ${project.url}
@@ -10,7 +10,7 @@ load: startup
 
 commands:
   vault-info:
-    description: Displays information about Vault 
+    description: Displays information about Vault
     usage: |
            /<command> - Displays Vault information
     permission: vault.admin
