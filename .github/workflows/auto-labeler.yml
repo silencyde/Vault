@@ -1,0 +1,16 @@
+name: "Auto Labeler"
+
+on:
+  issues:
+    types: [ opened, edited ]
+
+jobs:
+  labeler:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Label issues based on content"
+        uses: actions/labeler@v5

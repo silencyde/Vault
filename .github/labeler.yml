@@ -1,0 +1,24 @@
+bug:
+  - "bug"
+  - "error"
+  - "failed"
+  - "issue"
+  - "crash"
+enhancement:
+  - "enhancement"
+  - "feature"
+  - "improve"
+  - "request"
+  - "new feature"
+documentation:
+  - "docs"
+  - "documentation"
+  - "readme"
+help wanted:
+  - "help"
+  - "support"
+  - "question"
+good first issue:
+  - "good first issue"
+  - "beginner"
+  - "starter"
