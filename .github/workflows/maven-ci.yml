@@ -1,0 +1,32 @@
+name: "Build"
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ 21 ]
+        distribution: [ temurin ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: ${{ matrix.distribution }}
+          cache: maven
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
